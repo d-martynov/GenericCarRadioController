@@ -1,0 +1,70 @@
+#include "configuration.h"
+
+#ifdef CAR_MODEL 
+  #if(CAR_MODEL==OPEL_ASTRA_H_CAR)
+    #ifndef __ASTRA_H__H__
+      #define __ASTRA_H__H__
+  
+      /*EHU*/
+      const CAN_COMMAND CMD_EHU_BC_PRESS          {0x201, {0x01, 0x01}, 2};
+      const CAN_COMMAND CMD_EHU_BC_RELEASE        {0x201, {0x00, 0x01}, 2};
+      const CAN_COMMAND CMD_EHU_SETTINGS_PRESS    {0x201, {0x01, 0xFF}, 2};
+      const CAN_COMMAND CMD_EHU_SETTINGS_RELEASE  {0x201, {0x00, 0xFF}, 2};
+  
+      const CAN_COMMAND CMD_EHU_ARROW_UP_PRESS          {0x201, {0x01, 0x6C}, 2};
+      const CAN_COMMAND CMD_EHU_ARROW_UP_RELEASE        {0x201, {0x00, 0x6C}, 2};
+      const CAN_COMMAND CMD_EHU_ARROW_DOWN_PRESS        {0x201, {0x01, 0x6D}, 2};
+      const CAN_COMMAND CMD_EHU_ARROW_DOWN_RELEASE      {0x201, {0x00, 0x6D}, 2};
+      const CAN_COMMAND CMD_EHU_ARROW_RIGHT_PRESS       {0x201, {0x01, 0x6F}, 2};
+      const CAN_COMMAND CMD_EHU_ARROW_RIGHT_RELEASE     {0x201, {0x00, 0x6F}, 2};
+      const CAN_COMMAND CMD_EHU_ARROW_LEFT_PRESS        {0x201, {0x01, 0x6E}, 2};
+      const CAN_COMMAND CMD_EHU_ARROW_LEFT_RELEASE      {0x201, {0x00, 0x6E}, 2};
+
+      /*STEERING WHEEL*/
+      const CAN_COMMAND CMD_STEERING_WHEEL_VOLUME_WHEEL_UP      {0x206, {0x08, 0x93, 0x01}, 3};
+      const CAN_COMMAND CMD_STEERING_WHEEL_VOLUME_WHEEL_DOWN    {0x206, {0x08, 0x93, 0xFF}, 3}; 
+      const CAN_COMMAND CMD_STEERING_WHEEL_BC_WHEEL_UP          {0x206, {0x08, 0x83, 0x01}, 3};
+      const CAN_COMMAND CMD_STEERING_WHEEL_BC_WHEEL_DOWN        {0x206, {0x08, 0x83, 0xFF}, 3};
+      const CAN_COMMAND CMD_STEERING_WHEEL_BC_WHEEL_PRESS       {0x206, {0x01, 0x84}, 2};
+      const CAN_COMMAND CMD_STEERING_WHEEL_BC_WHEEL_RELEASE     {0x206, {0x00, 0x84}, 2};
+      const CAN_COMMAND CMD_STEERING_WHEEL_ARROW_UP_PRESS       {0x206, {0x01, 0x91}, 2}; 
+      const CAN_COMMAND CMD_STEERING_WHEEL_ARROW_UP_RELEASE     {0x206, {0x00, 0x91}, 2}; 
+      const CAN_COMMAND CMD_STEERING_WHEEL_ARROW_DOWN_PRESS     {0x206, {0x01, 0x92}, 2}; 
+      const CAN_COMMAND CMD_STEERING_WHEEL_ARROW_DOWN_RELEASE   {0x206, {0x00, 0x92}, 2}; 
+      const CAN_COMMAND CMD_STEERING_WHEEL_BUTTON_UP_PRESS      {0x206, {0x01, 0x81}, 2}; 
+      const CAN_COMMAND CMD_STEERING_WHEEL_BUTTON_UP_RELEASE    {0x206, {0x00, 0x81}, 2}; 
+      const CAN_COMMAND CMD_STEERING_WHEEL_BUTTON_DOWN_PRESS    {0x206, {0x01, 0x82}, 2}; 
+      const CAN_COMMAND CMD_STEERING_WHEEL_BUTTON_DOWN_RELEASE  {0x206, {0x00, 0x82}, 2};
+
+      const RADIO_CAN_COMMAND RADIO_CAN_COMMANDS[]
+      {
+        {&CMD_STEERING_WHEEL_VOLUME_WHEEL_UP,      &RADIO_CMD_VOLUME_UP,   RADIO_COMMAND_INTERVAL},
+        {&CMD_STEERING_WHEEL_VOLUME_WHEEL_DOWN,    &RADIO_CMD_VOLUME_DOWN, RADIO_COMMAND_INTERVAL},
+        {&CMD_STEERING_WHEEL_ARROW_UP_PRESS,       &RADIO_CMD_NEXT_TRACK, 0},
+        {&CMD_STEERING_WHEEL_ARROW_UP_RELEASE,     NULL, 0},
+        {&CMD_STEERING_WHEEL_ARROW_DOWN_PRESS,     &RADIO_CMD_PREV_TRACK, 0},
+        {&CMD_STEERING_WHEEL_ARROW_DOWN_RELEASE,   NULL, 0},            
+        {&CMD_STEERING_WHEEL_BUTTON_UP_PRESS,      &RADIO_CMD_FOLDER_DOWN, 0},
+        {&CMD_STEERING_WHEEL_BUTTON_UP_RELEASE,    NULL, 0},    
+        {&CMD_STEERING_WHEEL_BUTTON_DOWN_PRESS,    &RADIO_CMD_FOLDER_UP, 0},
+        {&CMD_STEERING_WHEEL_BUTTON_DOWN_RELEASE,  NULL, 0},
+      };   
+
+      /*** RADIO EMULATION ***/            
+      const CAN_COMMAND CMD_EHU_ON                        {0x501, {0x61, 0x00, 0x42, 0x03, 0x01, 0x00, 0x40, 0x01}, 8};
+      const CAN_COMMAND CMD_EHU_REQ_BC_STATUS             {0x501, {0x61, 0x00, 0x42, 0x12, 0x01, 0x00, 0x40, 0x01}, 8};
+
+      const CAN_COMMAND CMD_EHU_UNK1                      {0x46C, {0x41, 0x00}, 2};
+      const CAN_COMMAND_PERIODICAL PER_EHU_UNK1           {&CMD_EHU_UNK1, 1500, 0};
+
+      const CAN_COMMAND CMD_EHU_UNK2                      {0x691, {0x41, 0x00, 0x60, 0x02, 0x82, 0x00, 0x00, 0x2E}, 8};
+      const CAN_COMMAND_PERIODICAL PER_EHU_UNK2           {&CMD_EHU_UNK2, 2500, 0};   
+
+      /*** ADDONS **/
+      #include "astra_h_dis.h"
+      #include "astra_h_test_mode.h"
+      #include "astra_h_events.h"
+    #endif
+  #endif
+#endif
+
