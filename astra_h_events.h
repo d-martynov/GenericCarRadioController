@@ -107,15 +107,6 @@
             else if(cmd.startsWith("down"))             CAN_CONTROLLERS[CAN_A].sendCmdSequence(&CMD_EHU_ARROW_DOWN_PRESS, &CMD_EHU_ARROW_DOWN_RELEASE, 1, true, CAN_COMMAND_INTERVAL);
             else if(cmd.startsWith("left"))             CAN_CONTROLLERS[CAN_A].sendCmdSequence(&CMD_EHU_ARROW_LEFT_PRESS, &CMD_EHU_ARROW_LEFT_RELEASE, 1, true, CAN_COMMAND_INTERVAL);
             else if(cmd.startsWith("right"))            CAN_CONTROLLERS[CAN_A].sendCmdSequence(&CMD_EHU_ARROW_RIGHT_PRESS, &CMD_EHU_ARROW_RIGHT_RELEASE, 1, true, CAN_COMMAND_INTERVAL);          
-            /*else if(cmd.startsWith("test"))
-            {
-              //digitalWrite(RING_CONNECTION_PIN, SWITCH_ENABLED_LOGICAL_LEVEL);
-              digitalWrite(TIP_CONNECTION_PIN, SWITCH_ENABLED_LOGICAL_LEVEL);    
-              digitalPotWrite(0);
-              delay(5000);
-              digitalPotWrite(1);
-              //disableResistor();
-            } */
         }
         else if(in->startsWith("LOG:"))
         {
