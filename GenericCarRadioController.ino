@@ -9,9 +9,8 @@
 
 void setup()
 {
-    #if (PRINT_CAN_DATA | PRINT_POTENTIOMETER_INFO | PRINT_STATUS_INFO | ENABLE_SERIAL_CONTROL)
+    if(PRINT_CAN_DATA || PRINT_POTENTIOMETER_INFO || PRINT_STATUS_INFO || PRINT_DISPLAY_INFO || ENABLE_SERIAL_CONTROL)
       Serial.begin(115200);
-    #endif
     
     #if ENABLE_POTENTIOMETER
       setupPotentiometer(); 
@@ -25,23 +24,19 @@ void setup()
   
         if(!c->begin())
         {
-          #if PRINT_STATUS_INFO 
-            Serial.print("Controller "); Serial.print(c->name); Serial.println(" --> Init ERROR");
-          #endif
+          if(PRINT_STATUS_INFO){ Serial.print("Controller "); Serial.print(c->name); Serial.println(" --> Init ERROR"); }
+          
           return;
         }
         else
         {
-          #if PRINT_STATUS_INFO 
-            Serial.print("Controller "); Serial.print(c->name); Serial.println(" --> Init OK");
-          #endif      
+          if(PRINT_STATUS_INFO){ Serial.print("Controller "); Serial.print(c->name); Serial.println(" --> Init OK"); }
         }
       }
     #endif  
 
-    #if PRINT_STATUS_INFO
+    if(PRINT_STATUS_INFO)
       Serial.println("Steering wheel controller --> Init OK");
-    #endif
     
     afterSetup();
 }

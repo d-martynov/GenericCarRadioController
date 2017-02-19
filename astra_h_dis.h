@@ -6,31 +6,41 @@
   #define __ASTRA_H_DIS__H__
   
   #if ENABLE_DISPLAY
-    #define DIS_BOOT_MESSAGE "Opel Astra H"
-    const char *DIS_MESSAGES[]
-    {    
-      "Opel Astra H"
-    };  
-  
+    #define DIS_MESSAGE "Opel Astra H"
+    
     #define DIS_REFRESH_INTERVAL      5000  //ms
     #define DIS_MAX_CHARACTERS        14  
-    #define DIS_RANDOM_TEXT_INTERVAL  15000 //ms
+    #define DIS_RANDOM_TEXT_INTERVAL  10000 //ms
     #define DIS_TEXT_START_END_DELAY  1750  //ms
     #define DIS_TEXT_STEP_DELAY       300  //ms
 
     #if ENABLE_RANDOM_TEXTS
+      const char *DIS_MESSAGES[]
+      {    
+        "Opel Astra H"
+      };  
+  
       unsigned long astraHLastRandomDISMillis = 0;
-      int astraHCustomRandom(int min, int max) //[min,max) || [min,max-1]
-      {        
-        int seed = analogRead(A0) + micros();   
-        randomSeed(seed);
-      
-        return random(min, max);
+      unsigned long astraHLastRandomSeed = 0;
+      char astraHLastRandomNumber = -1;
+
+      int astraHCustomRandom(int min, int max, boolean notRepeated) //[min,max) || [min,max-1]
+      { 
+        unsigned char r;
+        do
+        {       
+          astraHLastRandomSeed += analogRead(A2) + micros();       
+          r = (astraHLastRandomSeed % (max-min)) + min;
+        }
+        while(notRepeated && r == astraHLastRandomNumber);
+       
+        astraHLastRandomNumber = r;        
+        return r;        
       }
   
       const char *astraHGetRandomMessage()
       {
-        return DIS_MESSAGES[astraHCustomRandom(0, sizeof(DIS_MESSAGES) / sizeof(const char*))];    
+        return DIS_MESSAGES[astraHCustomRandom(0, sizeof(DIS_MESSAGES) / sizeof(const char*), true)];            
       }
     #endif
         
@@ -50,7 +60,6 @@
     void astraHSendToDIS(CAN_CONTROLLER *can);
     void astraHRefreshDISText(CAN_CONTROLLER *can);
     bool astraHIsFirstChar();
-    bool astraHIsLastChar();
     bool astraHIsLastMarqueeChar();
     bool astraHHasRemainingMarqueeText();
     bool astraHCheckMarquee();
@@ -74,8 +83,6 @@
       astraHDISText = msg;         
       astraHFreeDISText = true;
       astraHDISTextLength = strlen(msg);
-      
-      astraHRefreshDISText(can);
     }     
     
     void astraHSetDISText(CAN_CONTROLLER *can, const char *msg)
@@ -87,8 +94,6 @@
       astraHDISText = (char*)msg;         
       astraHFreeDISText = false;
       astraHDISTextLength = strlen(msg);
-      
-      astraHRefreshDISText(can);
     }     
     
     void astraHSendToDIS(CAN_CONTROLLER *can, const char *inMsg)
@@ -100,11 +105,14 @@
       memset(msg, 0x00, DIS_MAX_CHARACTERS);
       memcpy(msg, (inMsg + astraHDISTextPos), partLen);
 
-      #if PRINT_DISPLAY_INFO
-        Serial.print("Sending text: ");
+      if(PRINT_DISPLAY_INFO)
+      {
+        Serial.print("Sending (DIS) : ");
+        Serial.print(millis());
+        Serial.print("ms - ");
         Serial.write(msg, partLen);
         Serial.println();
-      #endif    
+      }
       
       char buf[] = 
       {
@@ -127,8 +135,8 @@
     
       free(cmd);
       free(msg);
-    
-      astraHLastDISMillis = millis();
+
+      astraHLastDISMillis = astraHLastDISMarqueeMillis = millis();      
     }  
     
     void astraHSendToDIS(CAN_CONTROLLER *can)
@@ -138,12 +146,11 @@
        
     void astraHRefreshDISText(CAN_CONTROLLER *can)
     {
-      can->sendCmd(&CMD_DIS_REQUEST_SET_TEXT); //Request with max length (14 char)      
+      can->sendCmd(&CMD_DIS_REQUEST_SET_TEXT); //Request with max length (14 char)  
     }
 
     /*** MARQUEE ***/
     bool astraHIsFirstChar(){ return (astraHDISTextPos == 0); }
-    bool astraHIsLastChar(){ return (astraHDISTextPos == astraHDISTextLength); }
     bool astraHIsLastMarqueeChar(){ return (astraHDISTextPos == (astraHDISTextLength - DIS_MAX_CHARACTERS)); }
     bool astraHHasRemainingMarqueeText(){ return (astraHDISTextPos < (astraHDISTextLength - DIS_MAX_CHARACTERS)); }
 
@@ -167,11 +174,14 @@
             if((current - astraHLastRandomDISMillis) >= DIS_RANDOM_TEXT_INTERVAL)
             {
               astraHLastRandomDISMillis = current;
-              astraHSetDISText(&CAN_CONTROLLERS[CAN_A], astraHGetRandomMessage());            
+              astraHSetDISText(&CAN_CONTROLLERS[CAN_A], astraHGetRandomMessage());    
+              return true;        
             }      
-            else astraHDISTextPos = 0;  
-
-            return true;
+            else 
+            {
+              astraHDISTextPos = 0;  
+              return false;
+            }
           #else      
             astraHDISTextPos = 0;
             return false;

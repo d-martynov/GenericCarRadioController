@@ -55,14 +55,38 @@
               }
           #endif
           
-          #if PRINT_CAN_DATA          
-            char *str = canCmdToString("Received", this->name, cmd);
-            Serial.println(str);
-            Serial.flush();      
-            free(str);
-          #endif
+          if(PRINT_CAN_DATA)
+            printCanCmd("Received", this->name, cmd);          
           
           return cmd;
+      }
+      
+      void printCanCmd(const char *prefix, const char *controllerName, CAN_COMMAND *cmd)
+      {
+        if(prefix != NULL)
+          Serial.print(prefix);
+
+        if(controllerName != NULL)
+        {
+          Serial.print(" (");
+          Serial.print(controllerName);
+          Serial.print(")");
+        }
+
+        Serial.print(" : ");
+        Serial.print(millis());
+        Serial.print(" - 0x");
+        Serial.print(cmd->id, HEX);
+        Serial.print(" -> ");
+
+        for(int i = 0; i < cmd->len; i++)
+        {
+          Serial.print(cmd->buf[i], HEX);
+          Serial.print(',');  
+        }
+
+        Serial.println();
+        Serial.flush();
       }
     
     public:
@@ -101,7 +125,7 @@
 
       void setupPins()
       {
-        digitalWrite(this->csPin, HIGH); 
+        digitalWrite(this->csPin, SWITCH_DISABLED_LOGICAL_LEVEL); 
         pinMode(this->csPin, OUTPUT);      
       }
 
@@ -110,18 +134,17 @@
           unsigned char i = 1;
           for(; this->CAN->begin(this->bitrate, this->clockSet, this->mode) != CAN_OK; i++)
           {
-              #if PRINT_STATUS_INFO
-                Serial.print(i); Serial.println(" - CAN BUS init fail.");
-              #endif
+              if(PRINT_STATUS_INFO){ Serial.print(i); Serial.println(" - CAN BUS init fail."); }
               
               delay(1000);
     
               if(i >= CAN_INIT_MAX_RETRIES)
               {
-                  #if PRINT_STATUS_INFO
+                  if(PRINT_STATUS_INFO) 
+                  {
                     Serial.println("Can init limit reached. Performing an Arduino reset."); 
                     Serial.flush();                                 
-                  #endif
+                  }
                   
                   resetArduino();
               }
@@ -149,15 +172,11 @@
 
       bool sendCmd(const CAN_COMMAND *cmd)
       {   
-           #if PRINT_CAN_DATA
-              char *str = canCmdToString("Sending", this->name, cmd);
-              Serial.println(str);
-              Serial.flush();      
-              free(str);
-            #else
+          if(PRINT_CAN_DATA)
+            printCanCmd("Sending", this->name, (CAN_COMMAND*)cmd);              
+          else
               delay(1);
-            #endif
-            
+          
           return (CAN->sendMsgBuf(cmd->id, 0, cmd->len, (byte*)cmd->buf) == CAN_OK);
       }      
             
@@ -199,10 +218,6 @@
           CAN_COMMAND *cmd = readCmdFromCANController();
           if(cmd != NULL)
             rxQueue.push_back(cmd);
-
-          /*#if !PRINT_CAN_DATA
-            delay(20);
-          #endif*/
         }
 
         return i;

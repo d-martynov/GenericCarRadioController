@@ -56,6 +56,7 @@
             #else
               astraHSetDISText(&CAN_CONTROLLERS[CAN_A], DIS_MESSAGE);
             #endif
+            astraHRefreshDISText(&CAN_CONTROLLERS[CAN_A]);
          #endif 
       #endif
 
@@ -90,34 +91,74 @@
           astraHRefreshDISText(&CAN_CONTROLLERS[CAN_A]);                  
         }
       }
-    #endif
+    #endif 
   }
 
   void handleSerialInput(String *in)
   {    
     #if ENABLE_SERIAL_CONTROL
-        if(in->startsWith("settings"))                CAN_CONTROLLERS[CAN_A].sendCmdSequence(&CMD_EHU_SETTINGS_PRESS, &CMD_EHU_SETTINGS_RELEASE, 1, true, CAN_COMMAND_INTERVAL);
-        else if(in->startsWith("bc"))                 CAN_CONTROLLERS[CAN_A].sendCmdSequence(&CMD_EHU_BC_PRESS, &CMD_EHU_BC_RELEASE, 1, true, CAN_COMMAND_INTERVAL);
-        else if(in->startsWith("up"))                 CAN_CONTROLLERS[CAN_A].sendCmdSequence(&CMD_EHU_ARROW_UP_PRESS, &CMD_EHU_ARROW_UP_RELEASE, 1, true, CAN_COMMAND_INTERVAL);
-        else if(in->startsWith("down"))               CAN_CONTROLLERS[CAN_A].sendCmdSequence(&CMD_EHU_ARROW_DOWN_PRESS, &CMD_EHU_ARROW_DOWN_RELEASE, 1, true, CAN_COMMAND_INTERVAL);
-        else if(in->startsWith("left"))               CAN_CONTROLLERS[CAN_A].sendCmdSequence(&CMD_EHU_ARROW_LEFT_PRESS, &CMD_EHU_ARROW_LEFT_RELEASE, 1, true, CAN_COMMAND_INTERVAL);
-        else if(in->startsWith("right"))              CAN_CONTROLLERS[CAN_A].sendCmdSequence(&CMD_EHU_ARROW_RIGHT_PRESS, &CMD_EHU_ARROW_RIGHT_RELEASE, 1, true, CAN_COMMAND_INTERVAL);
-
+        if(in->startsWith("BC:"))
+        {
+            String cmd = in->substring(3);
+            
+            if(cmd.startsWith("settings"))              CAN_CONTROLLERS[CAN_A].sendCmdSequence(&CMD_EHU_SETTINGS_PRESS, &CMD_EHU_SETTINGS_RELEASE, 1, true, CAN_COMMAND_INTERVAL);
+            else if(cmd.startsWith("bc"))               CAN_CONTROLLERS[CAN_A].sendCmdSequence(&CMD_EHU_BC_PRESS, &CMD_EHU_BC_RELEASE, 1, true, CAN_COMMAND_INTERVAL);
+            else if(cmd.startsWith("up"))               CAN_CONTROLLERS[CAN_A].sendCmdSequence(&CMD_EHU_ARROW_UP_PRESS, &CMD_EHU_ARROW_UP_RELEASE, 1, true, CAN_COMMAND_INTERVAL);
+            else if(cmd.startsWith("down"))             CAN_CONTROLLERS[CAN_A].sendCmdSequence(&CMD_EHU_ARROW_DOWN_PRESS, &CMD_EHU_ARROW_DOWN_RELEASE, 1, true, CAN_COMMAND_INTERVAL);
+            else if(cmd.startsWith("left"))             CAN_CONTROLLERS[CAN_A].sendCmdSequence(&CMD_EHU_ARROW_LEFT_PRESS, &CMD_EHU_ARROW_LEFT_RELEASE, 1, true, CAN_COMMAND_INTERVAL);
+            else if(cmd.startsWith("right"))            CAN_CONTROLLERS[CAN_A].sendCmdSequence(&CMD_EHU_ARROW_RIGHT_PRESS, &CMD_EHU_ARROW_RIGHT_RELEASE, 1, true, CAN_COMMAND_INTERVAL);          
+            /*else if(cmd.startsWith("test"))
+            {
+              //digitalWrite(RING_CONNECTION_PIN, SWITCH_ENABLED_LOGICAL_LEVEL);
+              digitalWrite(TIP_CONNECTION_PIN, SWITCH_ENABLED_LOGICAL_LEVEL);    
+              digitalPotWrite(0);
+              delay(5000);
+              digitalPotWrite(1);
+              //disableResistor();
+            } */
+        }
+        else if(in->startsWith("LOG:"))
+        {
+            String cmd = in->substring(4);
+            if(cmd.startsWith("get"))
+            {
+              cmd = cmd.substring(3);
+              Serial.print("RES:");
+              Serial.print(cmd);
+              Serial.print("=");
+                            
+              if(cmd.startsWith("Can"))Serial.println(PRINT_CAN_DATA ? 1 : 0);
+              else if(cmd.startsWith("DIS"))Serial.println(PRINT_DISPLAY_INFO ? 1 : 0);
+              else if(cmd.startsWith("Pot"))Serial.println(PRINT_POTENTIOMETER_INFO ? 1 : 0);              
+              else if(cmd.startsWith("Stat"))Serial.println(PRINT_STATUS_INFO ? 1 : 0);
+            }
+            else            
+            {
+              cmd = cmd.substring(3);
+              bool v = (cmd.endsWith("=1") ? true : false);              
+              if(cmd.startsWith("Can"))PRINT_CAN_DATA = v;
+              else if(cmd.startsWith("DIS"))PRINT_DISPLAY_INFO = v;
+              else if(cmd.startsWith("Pot"))PRINT_POTENTIOMETER_INFO = v;              
+              else if(cmd.startsWith("Stat"))PRINT_STATUS_INFO = v;
+            }
+        }
+         
         #if ENABLE_RADIO_CONTROL
           else if(in->startsWith("RAD:"))
           {
               String cmd = in->substring(4);
-              if(cmd.startsWith("vol_up"))              enableRadioCmd(&RADIO_CMD_VOLUME_UP, RADIO_COMMAND_INTERVAL);        
-              else if(cmd.startsWith("vol_down"))       enableRadioCmd(&RADIO_CMD_VOLUME_DOWN, RADIO_COMMAND_INTERVAL);
-              else if(cmd.startsWith("next_track"))     enableRadioCmd(&RADIO_CMD_NEXT_TRACK, RADIO_COMMAND_INTERVAL);
-              else if(cmd.startsWith("prev_track"))     enableRadioCmd(&RADIO_CMD_PREV_TRACK, RADIO_COMMAND_INTERVAL);
-              else if(cmd.startsWith("display"))        enableRadioCmd(&RADIO_CMD_DISPLAY, RADIO_COMMAND_INTERVAL);
-              else if(cmd.startsWith("mute"))           enableRadioCmd(&RADIO_CMD_MUTE, RADIO_COMMAND_INTERVAL);
-              else if(cmd.startsWith("source"))         enableRadioCmd(&RADIO_CMD_SOURCE, RADIO_COMMAND_INTERVAL);
-              else if(cmd.startsWith("band_escape"))    enableRadioCmd(&RADIO_CMD_BAND_ESCAPE, RADIO_COMMAND_INTERVAL);
-              else if(cmd.startsWith("folder_up"))      enableRadioCmd(&RADIO_CMD_FOLDER_UP, RADIO_COMMAND_INTERVAL);
-              else if(cmd.startsWith("folder_down"))    enableRadioCmd(&RADIO_CMD_FOLDER_DOWN, RADIO_COMMAND_INTERVAL);
-              else if(cmd.startsWith("voice_control"))  enableRadioCmd(&RADIO_CMD_VOICE_CONTROL, RADIO_COMMAND_INTERVAL);
+              
+              if(cmd.startsWith("vol+"))              enableRadioCmd(&RADIO_CMD_VOLUME_UP, RADIO_COMMAND_INTERVAL);        
+              else if(cmd.startsWith("vol-"))         enableRadioCmd(&RADIO_CMD_VOLUME_DOWN, RADIO_COMMAND_INTERVAL);
+              else if(cmd.startsWith("n_track"))      enableRadioCmd(&RADIO_CMD_NEXT_TRACK, RADIO_COMMAND_INTERVAL);
+              else if(cmd.startsWith("p_track"))      enableRadioCmd(&RADIO_CMD_PREV_TRACK, RADIO_COMMAND_INTERVAL);
+              else if(cmd.startsWith("dis"))          enableRadioCmd(&RADIO_CMD_DISPLAY, RADIO_COMMAND_INTERVAL);
+              else if(cmd.startsWith("mute"))         enableRadioCmd(&RADIO_CMD_MUTE, RADIO_COMMAND_INTERVAL);
+              else if(cmd.startsWith("src"))          enableRadioCmd(&RADIO_CMD_SOURCE, RADIO_COMMAND_INTERVAL);
+              else if(cmd.startsWith("band"))         enableRadioCmd(&RADIO_CMD_BAND_ESCAPE, RADIO_COMMAND_INTERVAL);
+              else if(cmd.startsWith("fldr_u"))       enableRadioCmd(&RADIO_CMD_FOLDER_UP, RADIO_COMMAND_INTERVAL);
+              else if(cmd.startsWith("fldr_d"))       enableRadioCmd(&RADIO_CMD_FOLDER_DOWN, RADIO_COMMAND_INTERVAL);
+              else if(cmd.startsWith("voice"))        enableRadioCmd(&RADIO_CMD_VOICE_CONTROL, RADIO_COMMAND_INTERVAL);
           }    
         #endif
         
@@ -130,8 +171,8 @@
               #if ENABLE_RANDOM_TEXTS
                 astraHLastRandomDISMillis = current;                
               #endif
-              astraHLastDISMarqueeMillis = current;
               astraHSetDISText(&CAN_CONTROLLERS[CAN_A], &msg);
+              astraHRefreshDISText(&CAN_CONTROLLERS[CAN_A]);
           }
         #endif
       #endif 
